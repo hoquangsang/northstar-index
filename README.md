@@ -10,6 +10,8 @@ The project can scrape public OptiSigns support articles, convert them to
 Markdown, track local changes, upload changed documents to Gemini File Search,
 and answer questions with verified article citations.
 
+Daily sync logs: [GitHub Actions / Daily Knowledge Sync](https://github.com/hoquangsang/northstar-index/actions/workflows/daily-sync.yml)
+
 ## Setup
 
 ```powershell
@@ -109,15 +111,12 @@ CI runs these checks and a Docker build in GitHub Actions.
 
 ## Scheduled Sync
 
-Daily knowledge-base sync runs in GitHub Actions:
-
-```text
-.github/workflows/daily-sync.yml
-```
+Daily knowledge-base sync runs in [GitHub Actions](https://github.com/hoquangsang/northstar-index/actions/workflows/daily-sync.yml).
 
 The sync job fetches Zendesk articles and updates Gemini File Search. The
 Render demo reads from that same Gemini store, so a Render deploy hook is not
-needed for normal document updates.
+needed for normal document updates. Trigger the workflow manually with
+`limit=50` to refresh the store with at least 30 articles for submission.
 
 ## Docker
 

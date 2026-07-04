@@ -12,9 +12,6 @@ data/articles/*
 !data/articles/.gitkeep
 data/manifest.json
 logs/*
-!logs/.gitkeep
-screenshots/*
-!screenshots/.gitkeep
 
 docs/requirements/
 .tmp-silver-raccoon/
