@@ -1,0 +1,56 @@
+name: Daily Knowledge Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Maximum number of Zendesk articles to sync"
+        required: false
+        default: "50"
+  schedule:
+    - cron: "37 18 * * *"
+
+jobs:
+  sync:
+    name: Sync OptiSigns docs to Gemini File Search
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_FILE_SEARCH_STORE_NAME: ${{ secrets.GEMINI_FILE_SEARCH_STORE_NAME }}
+      GEMINI_FILE_SEARCH_STORE_DISPLAY_NAME: ${{ vars.GEMINI_FILE_SEARCH_STORE_DISPLAY_NAME || 'Northstar OptiSigns KB' }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.1-flash-lite' }}
+      SYNC_LIMIT: ${{ inputs.limit || '50' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Restore sync manifest cache
+        uses: actions/cache@v4
+        with:
+          path: data/manifest.json
+          key: gemini-manifest-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            gemini-manifest-${{ github.ref_name }}-
+            gemini-manifest-
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify Gemini secret
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY GitHub secret is required for daily sync."
+            exit 1
+          fi
+
+      - name: Sync knowledge base
+        run: python main.py sync --limit "$SYNC_LIMIT"

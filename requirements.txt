@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+typer
+google-genai>=2.10,<3
+httpx
+beautifulsoup4
+markdownify
+readability-lxml
+lxml
+pydantic
+pydantic-settings
+python-dotenv
+tenacity
+rich
+streamlit
