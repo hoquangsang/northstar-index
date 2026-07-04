@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.venv
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.tmp-silver-raccoon
+docs/requirements
+logs/*
+data/articles/*
+data/manifest.json
+screenshots/*
