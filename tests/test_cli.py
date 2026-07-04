@@ -2,25 +2,18 @@ from __future__ import annotations
 
 from app import cli
 from app.cli import app
-from app.schemas import AskResponse, AskSource, SyncResponse
+from app.schemas import AnswerLanguage, AskResponse, AskSource, SyncResponse
 from typer.testing import CliRunner
 
 
 def test_cli_exposes_commands() -> None:
-    runner = CliRunner()
+    command_names = {
+        command.callback.__name__
+        for command in app.registered_commands
+        if command.callback is not None
+    }
 
-    result = runner.invoke(app, ["--help"])
-
-    assert result.exit_code == 0
-    assert "serve" in result.output
-    assert "sync" in result.output
-    assert "ask" in result.output
-    assert "stats" in result.output
-
-    ask_help = runner.invoke(app, ["ask", "--help"])
-
-    assert ask_help.exit_code == 0
-    assert "--language" in ask_help.output
+    assert command_names == {"serve", "sync", "ask", "stats"}
 
 
 def test_cli_sync_forwards_options(monkeypatch) -> None:
@@ -51,10 +44,11 @@ def test_cli_sync_forwards_options(monkeypatch) -> None:
 
 
 def test_cli_ask_prints_verified_article_urls(monkeypatch) -> None:
-    monkeypatch.setattr(
-        cli,
-        "answer_question",
-        lambda question, language: AskResponse(
+    captured: dict[str, object] = {}
+
+    def fake_answer(question: str, language: AnswerLanguage) -> AskResponse:
+        captured.update({"question": question, "language": language})
+        return AskResponse(
             status="answered",
             answer="- Grounded answer",
             sources=[
@@ -64,12 +58,14 @@ def test_cli_ask_prints_verified_article_urls(monkeypatch) -> None:
                 )
             ],
             model="gemini-test",
-        ),
-    )
+        )
+
+    monkeypatch.setattr(cli, "answer_question", fake_answer)
     runner = CliRunner()
 
     result = runner.invoke(app, ["ask", "Question", "--language", "en"])
 
     assert result.exit_code == 0
+    assert captured == {"question": "Question", "language": AnswerLanguage.ENGLISH}
     assert "- Grounded answer" in result.output
     assert "Article URL: https://support.optisigns.com" in result.output
